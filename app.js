@@ -1,5 +1,4 @@
 const square = document.querySelectorAll('.square')
-const hoe = document.querySelector('.hoe')
 const timeleft = document.querySelector('#time-left')
 let score = document.querySelector('#score')
 
