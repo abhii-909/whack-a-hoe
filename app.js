@@ -81,8 +81,10 @@ function randomSquare() {
     hitPosition = randomPosition.id
 }
 
+// Enhanced mobile touch handling
 squares.forEach(square => {
-    square.addEventListener('click', () => {
+    const handleHit = (e) => {
+        e.preventDefault()
         if (square.id === hitPosition && gameActive) {
             result++
             scoreElement.textContent = result
@@ -90,11 +92,24 @@ squares.forEach(square => {
             
             square.classList.remove('hoe')
             
+            // Visual feedback
             square.style.transform = 'scale(0.9)'
+            square.style.background = 'rgba(255, 255, 255, 0.2)'
+            
             setTimeout(() => {
                 square.style.transform = 'scale(1)'
-            }, 100)
+                square.style.background = ''
+            }, 150)
         }
+    }
+    
+    // Use both click and touchstart for better mobile responsiveness
+    square.addEventListener('click', handleHit)
+    square.addEventListener('touchstart', handleHit, { passive: false })
+    
+    // Prevent context menu on long press for mobile
+    square.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
     })
 })
 
@@ -133,6 +148,7 @@ function startGame() {
     squares.forEach(square => {
         square.classList.remove('hoe')
         square.style.transform = 'scale(1)'
+        square.style.background = ''
     })
     
     moveHoe()
@@ -147,20 +163,25 @@ function endGame() {
     squares.forEach(square => {
         square.classList.remove('hoe')
         square.style.transform = 'scale(1)'
+        square.style.background = ''
     })
     
+    // Reset button and difficulty selector
     startButton.textContent = '🎮 START GAME'
     startButton.disabled = false
     difficultySelect.disabled = false
     
-    let message = `GAME OVER! 🎯\n\nYour Score: ${result}\n`
+    // Show results
+    let message = `GAME OVER! 🎯\n\nYour Score: ${result}\n\n`
     
-    if (result >= 10) {
-        message += "🏆 AMAZING! You're a Whack-a-Hoe Master!"
+    if (result >= 15) {
+        message += "🏆 LEGENDARY! You're a Whack-a-Hoe God!"
+    } else if (result >= 10) {
+        message += "🥇 AMAZING! You're a Whack-a-Hoe Master!"
     } else if (result >= 5) {
         message += "🎉 Great job! You've got good reflexes!"
     } else {
-        message += "💪 No problem! They make penty mistakes for you to practice!"
+        message += "💪 No problem! They make plenty mistakes for you to practice!"
     }
     
     setTimeout(() => {
@@ -168,7 +189,19 @@ function endGame() {
     }, 500)
 }
 
+// Enhanced button event handling for mobile
 startButton.addEventListener('click', startGame)
+startButton.addEventListener('touchstart', (e) => {
+    e.preventDefault()
+    if (!startButton.disabled) {
+        startGame()
+    }
+}, { passive: false })
+
+// Prevent double-tap zoom on start button
+startButton.addEventListener('touchend', (e) => {
+    e.preventDefault()
+})
 
 difficultySelect.addEventListener('change', () => {
     if (!gameActive) {
@@ -176,4 +209,36 @@ difficultySelect.addEventListener('change', () => {
         const setting = difficultySettings[selectedDifficulty]
         console.log(`Difficulty set to: ${setting.label} (${setting.speed}ms)`)
     }
+})
+
+// Prevent zoom on double tap for the entire game area
+document.addEventListener('touchstart', function(e) {
+    if (e.touches.length > 1) {
+        e.preventDefault()
+    }
+})
+
+let lastTouchEnd = 0
+document.addEventListener('touchend', function(e) {
+    const now = (new Date()).getTime()
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault()
+    }
+    lastTouchEnd = now
+}, false)
+
+// Optional: Add haptic feedback for mobile devices (if supported)
+function triggerHapticFeedback() {
+    if (navigator.vibrate) {
+        navigator.vibrate(50) // Vibrate for 50ms
+    }
+}
+
+// You can call triggerHapticFeedback() when a hoe is hit for extra mobile feedback
+squares.forEach(square => {
+    square.addEventListener('touchstart', () => {
+        if (square.id === hitPosition && gameActive) {
+            triggerHapticFeedback()
+        }
+    })
 })
